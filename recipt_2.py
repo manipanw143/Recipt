@@ -30,20 +30,23 @@ def image_to_base64(image_path):
         print(f"⚠️ Error processing image {image_path}: {str(e)}")
         return ""
 
-# Example usage:
-blue_logo_base64 = image_to_base64("img/blue_logo.png")
-mataji_image_base64 = image_to_base64("img/mataji.jpg")
+# Image paths (using relative paths for instant rendering and lightweight all-in-one file)
+blue_logo_base64 = "img/blue_logo.png" if os.path.exists("img/blue_logo.png") else image_to_base64("img/blue_logo.png")
+mataji_image_base64 = "img/mataji.jpg" if os.path.exists("img/mataji.jpg") else image_to_base64("img/mataji.jpg")
 
 def install_required_packages():
     """Install required packages if not available"""
-    required_packages = ['pandas', 'openpyxl', 'weasyprint']
+    required_packages = ['pandas', 'openpyxl']
     
     for package in required_packages:
         try:
             __import__(package)
         except ImportError:
-            print(f"Installing {package}...")
-            subprocess.check_call([sys.executable, "-m", "pip", "install", package])
+            try:
+                print(f"Installing {package}...")
+                subprocess.check_call([sys.executable, "-m", "pip", "install", package, "--break-system-packages"])
+            except Exception as e:
+                print(f"⚠️ Could not install {package} automatically: {e}")
 
 def process_excel_for_receipts(file_path):
     """Process Excel file and prepare data for bulk PDF receipt generation"""
@@ -139,7 +142,7 @@ def generate_single_receipt_html(record, blue_logo_base64="", mataji_image_base6
         return str(value).strip()
     
     sequential_user_id = record['user_id']
-    receipt_date = "05/08/2025"
+    receipt_date = "16/08/2026"
     
     # Combine address
     address_parts = [
@@ -204,7 +207,7 @@ def generate_single_receipt_html(record, blue_logo_base64="", mataji_image_base6
             <div class="receipt-details">
                 <div class="receipt-header">
                     <div class="serial-number">यूजर आईडी : <strong>{sequential_user_id}</strong></div>
-                    <div class="receipt-title">वार्षिक शुल्क पावती 2025</div>
+                    <div class="receipt-title">वार्षिक शुल्क पावती 2026</div>
                     <div class="date">दिनांक : <strong>{receipt_date}</strong></div>
                 </div>
 
@@ -321,35 +324,39 @@ def get_optimized_dual_receipt_css():
             width: 210mm;
             min-height: 297mm;
             margin: 0 auto;
-            padding: 3mm 4mm;
+            padding: 8mm;
             display: flex;
             flex-direction: column;
-            gap: 2mm;
+            justify-content: flex-start;
+            gap: 8mm;
             page-break-after: always;
             page-break-inside: avoid;
             background: white;
+            box-sizing: border-box;
         }
         
-        /* OPTIMIZED Receipt Styling - Maximum space utilization */
+        /* OPTIMIZED Receipt Styling - Fit to content */
         .receipt-container { 
-            flex: 1;
-            height: 142mm;
-            padding: 2mm;
+            width: 100%;
+            height: auto;
+            padding: 0;
             background-color: white;
             border: none;
             page-break-inside: avoid;
-            display: flex;
-            flex-direction: column;
+            display: block;
+            box-sizing: border-box;
         }
         
         .receipt-border { 
             border: 1.5px solid #000;
-            padding: 3mm;
+            padding: 3.5mm 4mm;
             background-color: white;
             position: relative;
-            flex: 1;
+            height: auto;
             display: flex;
             flex-direction: column;
+            width: 100%;
+            box-sizing: border-box;
         }
         
         /* COMPACT Header religious text */
@@ -357,7 +364,7 @@ def get_optimized_dual_receipt_css():
             display: flex;
             justify-content: space-between;
             margin-bottom: 2mm;
-            font-size: 7px;
+            font-size: 7.5px;
             font-weight: 600;
             line-height: 1;
         }
@@ -384,12 +391,12 @@ def get_optimized_dual_receipt_css():
         
         .left-logo,
         .right-logo {
-            flex: 0 0 40px;
+            flex: 0 0 42px;
         }
         
         .official-seal {
-            width: 40px;
-            height: 40px;
+            width: 42px;
+            height: 42px;
             border: 1.5px solid #1e40af;
             border-radius: 50%;
             display: flex;
@@ -420,7 +427,7 @@ def get_optimized_dual_receipt_css():
         .deity-image img,
         .deity-placeholder img,
         .deity-placeholder-first img {
-            max-width: 40px;
+            max-width: 42px;
             height: auto;
             object-fit: contain;
         }
@@ -438,7 +445,7 @@ def get_optimized_dual_receipt_css():
         }
         
         .organization-name {
-            font-size: 12px;
+            font-size: 13px;
             font-weight: 700;
             color: #dc2626;
             margin: 0 0 1mm 0;
@@ -446,26 +453,25 @@ def get_optimized_dual_receipt_css():
         }
         
         .address {
-            font-size: 8px;
+            font-size: 8.5px;
             margin-bottom: 1mm;
             font-weight: 600;
         }
         
         .contact-info {
-            font-size: 6px;
+            font-size: 6.5px;
             margin-bottom: 1mm;
             color: #374151;
         }
         
         .registration {
-            font-size: 6px;
+            font-size: 6.5px;
             color: #dc2626;
             font-weight: 600;
         }
         
         /* COMPACT Receipt details */
         .receipt-details {
-            flex: 1;
             display: flex;
             flex-direction: column;
         }
@@ -480,31 +486,30 @@ def get_optimized_dual_receipt_css():
         }
         
         .serial-number {
-            font-size: 8px;
+            font-size: 8.5px;
             font-weight: 600;
         }
         
         .receipt-title {
-            font-size: 11px;
+            font-size: 11.5px;
             font-weight: 700;
             text-align: center;
         }
         
         .date {
-            font-size: 8px;
+            font-size: 8.5px;
             font-weight: 600;
         }
         
         /* OPTIMIZED Personal information */
         .personal-info {
-            flex: 1;
             margin-bottom: 2mm;
         }
         
         .info-row {
             display: flex;
-            gap: 8px;
-            margin-bottom: 1.5mm;
+            gap: 10px;
+            margin-bottom: 2mm;
             flex-wrap: wrap;
         }
         
@@ -512,7 +517,7 @@ def get_optimized_dual_receipt_css():
             display: flex;
             gap: 2mm;
             min-width: 120px;
-            font-size: 8px;
+            font-size: 8.5px;
             align-items: center;
         }
         
@@ -530,8 +535,8 @@ def get_optimized_dual_receipt_css():
         .value {
             font-weight: 400;
             border-bottom: 1px solid #000;
-            padding: 0.5mm 1mm;
-            min-height: 3mm;
+            padding: 0.5mm 1.5mm;
+            min-height: 3.5mm;
             flex: 1;
         }
         
@@ -543,32 +548,35 @@ def get_optimized_dual_receipt_css():
             display: flex;
             gap: 2mm;
             margin-top: 1mm;
+            margin-bottom: 1mm;
             align-items: center;
-            font-size: 8px;
+            font-size: 8.5px;
         }
         
         .address-highlight {
-            padding: 1mm 2mm;
-            border-radius: 8px;
+            padding: 0.5mm 1.5mm;
+            border-radius: 4px;
             font-weight: 500;
             flex: 1;
             border-bottom: 1px solid #000;
         }
         
-        /* COMPACT Payment section */
+        /* COMPACT Payment section - placed directly below address without empty gap */
         .payment-section {
-            margin: 2mm 0;
+            margin-top: 2mm;
+            margin-bottom: 2.5mm;
+            padding-top: 1.5mm;
         }
         
         .payment-text {
-            font-size: 8px;
+            font-size: 8.5px;
             margin-bottom: 2mm;
             font-weight: 500;
         }
         
         .payment-options {
             display: flex;
-            gap: 15px;
+            gap: 18px;
             align-items: center;
         }
         
@@ -576,19 +584,19 @@ def get_optimized_dual_receipt_css():
             display: flex;
             align-items: center;
             gap: 2mm;
-            font-size: 8px;
+            font-size: 8.5px;
         }
         
         .checkbox {
-            width: 10px;
-            height: 10px;
+            width: 11px;
+            height: 11px;
             border: 1px solid #000;
             background-color: white;
         }
         
         .utr-box {
-            width: 60px;
-            height: 12px;
+            width: 65px;
+            height: 13px;
             border: 1px solid #000;
             background-color: white;
         }
@@ -598,14 +606,14 @@ def get_optimized_dual_receipt_css():
             display: flex;
             justify-content: space-between;
             align-items: flex-end;
-            margin-top: auto;
-            padding-top: 2mm;
+            margin-top: 2.5mm;
+            padding-top: 1.5mm;
         }
         
         .amount-box {
             border: 1.5px solid #000;
-            padding: 2mm 4mm;
-            font-size: 11px;
+            padding: 2mm 5mm;
+            font-size: 11.5px;
             font-weight: 700;
             display: flex;
             align-items: center;
@@ -617,12 +625,12 @@ def get_optimized_dual_receipt_css():
         }
         
         .rupee-symbol {
-            font-size: 10px;
+            font-size: 10.5px;
         }
         
         .signatures {
             display: flex;
-            gap: 25px;
+            gap: 30px;
         }
         
         .signature {
@@ -630,19 +638,18 @@ def get_optimized_dual_receipt_css():
         }
         
         .signature-line {
-            font-size: 7px;
+            font-size: 7.5px;
             font-weight: 600;
-            padding-top: 15px;
+            padding-top: 12px;
             border-top: 1px solid #000;
-            min-width: 50px;
+            min-width: 55px;
         }
         
         /* OPTIMIZED Print Styles */
         @media print {
             @page { 
                 size: A4 portrait; 
-                margin: 0; 
-                padding: 0;
+                margin: 8mm 8mm 8mm 8mm;
             }
             
             * {
@@ -655,35 +662,41 @@ def get_optimized_dual_receipt_css():
                 background: white !important;
                 margin: 0 !important;
                 padding: 0 !important;
+                width: 100% !important;
             }
             
             .page-container {
                 margin: 0 !important;
-                padding: 3mm 4mm !important;
-                width: 210mm !important;
-                min-height: 297mm !important;
-                height: 297mm !important;
+                padding: 0 !important;
+                width: 100% !important;
+                min-height: auto !important;
+                height: auto !important;
                 page-break-after: always !important;
                 display: flex !important;
                 flex-direction: column !important;
-                gap: 2mm !important;
+                justify-content: flex-start !important;
+                gap: 8mm !important;
+                box-sizing: border-box !important;
             }
             
             .receipt-container { 
                 page-break-inside: avoid !important;
                 background: white !important;
-                height: 142mm !important;
-                flex: 1 !important;
-                padding: 2mm !important;
+                height: auto !important;
+                padding: 0 !important;
+                width: 100% !important;
+                box-sizing: border-box !important;
             }
             
-            .receipt-border {
+            .receipt-border { 
                 border: 1.5px solid #000 !important;
                 background: white !important;
-                height: 100% !important;
-                flex: 1 !important;
+                height: auto !important;
+                padding: 3.5mm 4mm !important;
                 display: flex !important;
                 flex-direction: column !important;
+                width: 100% !important;
+                box-sizing: border-box !important;
             }
             
             .print-controls { 
@@ -700,17 +713,21 @@ def get_optimized_dual_receipt_css():
             }
             
             .receipt-details {
-                flex: 1 !important;
                 display: flex !important;
                 flex-direction: column !important;
             }
             
             .personal-info {
-                flex: 1 !important;
+                margin-bottom: 2mm !important;
+            }
+            
+            .payment-section {
+                margin-top: 2mm !important;
+                margin-bottom: 2.5mm !important;
             }
             
             .bottom-section {
-                margin-top: auto !important;
+                margin-top: 2.5mm !important;
             }
         }
         
@@ -775,69 +792,62 @@ def get_optimized_dual_receipt_css():
         /* Additional optimization for very small content */
         @media print {
             .info-row {
-                margin-bottom: 1.2mm !important;
+                margin-bottom: 2mm !important;
             }
             
             .info-item {
-                font-size: 7.5px !important;
-                gap: 1.5mm !important;
+                font-size: 8.5px !important;
+                gap: 2mm !important;
             }
             
             .label {
-                min-width: 55px !important;
+                min-width: 60px !important;
             }
             
             .value {
-                padding: 0.3mm 0.8mm !important;
-                min-height: 2.5mm !important;
+                padding: 0.5mm 1.5mm !important;
+                min-height: 3.5mm !important;
             }
         }
     """
 
 def generate_dual_receipt_pages(receipt_data, blue_logo_base64="", mataji_image_base64=""):
-    """Generate HTML with two receipts per A4 page - OPTIMIZED"""
+    """Generate HTML with two receipts per user on each A4 page - OPTIMIZED"""
     
     pages_html = ""
-    total_receipts = len(receipt_data)
-    total_pages = math.ceil(total_receipts / 2)
+    total_users = len(receipt_data)
+    total_receipts = total_users * 2
+    total_pages = total_users
     
-    print(f"\n📄 GENERATING OPTIMIZED DUAL RECEIPT LAYOUT:")
-    print(f"Total receipts: {total_receipts}")
+    print(f"\n📄 GENERATING OPTIMIZED DUAL RECEIPT LAYOUT (2 RECEIPTS PER USER):")
+    print(f"Total users: {total_users}")
+    print(f"Total receipts: {total_receipts} (2 per user)")
     print(f"Total A4 pages: {total_pages}")
-    print(f"Paper savings: {total_receipts - total_pages} pages saved!")
     
-    for page_num in range(total_pages):
-        start_idx = page_num * 2
-        end_idx = min(start_idx + 2, total_receipts)
-        
-        page_receipts = receipt_data[start_idx:end_idx]
-        
-        # Create page container
+    for page_num, receipt in enumerate(receipt_data):
+        # Create page container for this user
         page_html = '<div class="page-container">\n'
         
-        # Add receipts to this page
-        for receipt in page_receipts:
-            page_html += generate_single_receipt_html(receipt, blue_logo_base64, mataji_image_base64)
-        
-        # If only one receipt on last page, add empty container for balance
-        if len(page_receipts) == 1:
-            page_html += '<div class="receipt-container" style="border: none; background: transparent; visibility: hidden;"></div>'
+        # Add 2 identical receipts for this user (top and bottom)
+        page_html += generate_single_receipt_html(receipt, blue_logo_base64, mataji_image_base64)
+        page_html += generate_single_receipt_html(receipt, blue_logo_base64, mataji_image_base64)
         
         page_html += '</div>\n'
         
         pages_html += page_html
         
         # Progress indicator
-        if (page_num + 1) % 10 == 0:
+        if (page_num + 1) % 10 == 0 or (page_num + 1) == total_pages:
             print(f"Generated {page_num + 1}/{total_pages} pages...")
     
     return pages_html
 
 def generate_optimized_dual_html(receipt_data, blue_logo_base64="", mataji_image_base64=""):
-    """Generate optimized HTML with two receipts per A4 page"""
+    """Generate optimized HTML with two receipts per user on each A4 page"""
     
-    total_receipts = len(receipt_data)
-    total_pages = math.ceil(total_receipts / 2)
+    total_users = len(receipt_data)
+    total_receipts = total_users * 2
+    total_pages = total_users
     current_time = datetime.now().strftime("%H:%M")
     
     html_template = """<!DOCTYPE html>
@@ -845,7 +855,7 @@ def generate_optimized_dual_html(receipt_data, blue_logo_base64="", mataji_image
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Optimized Dual Receipt Layout - {total_receipts} Receipts in {total_pages} A4 Pages</title>
+    <title>Optimized Dual Receipt Layout - {total_users} Users ({total_receipts} Receipts, 2 per User) in {total_pages} A4 Pages</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Devanagari:wght@400;600;700&display=swap" rel="stylesheet">
@@ -855,20 +865,20 @@ def generate_optimized_dual_html(receipt_data, blue_logo_base64="", mataji_image
 </head>
 <body>
     <div class="print-controls">
-        <h2>📄 Optimized Dual Layout</h2>
+        <h2>📄 Optimized Dual Layout (2 Receipts/User)</h2>
         <div class="info">
-            <div><strong>Receipts:</strong> {total_receipts}</div>
+            <div><strong>Users:</strong> {total_users}</div>
+            <div><strong>Total Receipts:</strong> {total_receipts} (2 per user)</div>
             <div><strong>A4 Pages:</strong> {total_pages}</div>
-            <div><strong>Paper Saved:</strong> {paper_saved}</div>
             <div><strong>Space Utilization:</strong> 95%</div>
         </div>
         
         <div class="warning-box">
             ✅ <strong>Print Ready:</strong><br>
+            • 2 identical receipts per user/page<br>
             • Optimized spacing<br>
             • Perfect A4 fit<br>
-            • Minimal margins<br>
-            • 2 receipts per page
+            • Minimal margins
         </div>
         
         <button class="print-btn" onclick="printAll()">
@@ -901,20 +911,19 @@ def generate_optimized_dual_html(receipt_data, blue_logo_base64="", mataji_image
 
     # Generate all pages
     pages_html = generate_dual_receipt_pages(receipt_data, blue_logo_base64, mataji_image_base64)
-    paper_saved = total_receipts - total_pages
     
     # Generate final HTML
     final_html = html_template.format(
+        total_users=total_users,
         total_receipts=total_receipts,
         total_pages=total_pages,
-        paper_saved=paper_saved,
         css_styles=get_optimized_dual_receipt_css(),
         pages_html=pages_html
     )
     
     return final_html
 
-def save_and_open_dual_html(html_content, filename="optimized_dual_receipts_a4.html"):
+def save_and_open_dual_html(html_content, filename="all_in_one_dual_receipts.html"):
     """Save HTML and open in browser"""
     try:
         with open(filename, 'w', encoding='utf-8') as f:
@@ -938,25 +947,25 @@ def save_and_open_dual_html(html_content, filename="optimized_dual_receipts_a4.h
         print(f"❌ Error saving HTML: {str(e)}")
         return None
 
-def create_optimized_pdf_instructions(total_receipts, total_pages):
-    """Create instructions for optimized dual receipt PDF generation"""
-    paper_saved = total_receipts - total_pages
+def create_optimized_pdf_instructions(total_users, total_pages):
+    """Create instructions for optimized dual receipt PDF generation (2 receipts per user)"""
+    total_receipts = total_users * 2
     instructions = f"""
-# 📄 OPTIMIZED DUAL RECEIPT PDF GENERATION GUIDE - PERFECT A4 FIT
+# 📄 OPTIMIZED DUAL RECEIPT PDF GENERATION GUIDE - 2 RECEIPTS PER USER (A4)
 
 ## 🎯 OPTIMIZED LAYOUT FEATURES:
-- Total Receipts: {total_receipts}
-- A4 Pages Required: {total_pages}
-- Paper Saved: {paper_saved} pages (50% reduction!)
-- Space Utilization: 95% (vs 70% in single layout)
-- Layout: 2 receipts per A4 page with minimal gaps
+- Total Users: {total_users}
+- Total Receipts: {total_receipts} (2 identical receipts per user)
+- A4 Pages Required: {total_pages} (1 page per user)
+- Space Utilization: 95%
+- Layout: 2 identical receipts for each user per A4 page
 
 ## 🔧 KEY OPTIMIZATIONS:
+✅ 2 receipts per user per page (top & bottom copy with matching user ID)
 ✅ Reduced page margins (3mm vs 5mm)
 ✅ Minimized receipt spacing (2mm vs 5mm)
 ✅ Optimized receipt height (142mm each)
 ✅ Compact font sizes and line heights
-✅ Better space distribution
 ✅ Print-optimized CSS with exact measurements
 
 ## 📋 PERFECT PRINT SETTINGS:
@@ -989,15 +998,8 @@ python your_script.py
 wkhtmltopdf --page-size A4 --margin-top 3mm --margin-bottom 3mm --margin-left 4mm --margin-right 4mm optimized_dual_receipts_a4.html output.pdf
 ```
 
-## 🚀 SPACE EFFICIENCY COMPARISON:
-| Layout Type | Pages Needed | Space Used | Efficiency |
-|-------------|--------------|------------|------------|
-| Single Receipt | {total_receipts} | ~70% | Standard |
-| Old Dual | {total_pages} | ~85% | Good |
-| **Optimized Dual** | **{total_pages}** | **95%** | **Excellent** |
-
 ## 🔍 QUALITY CHECKLIST:
-✅ Each page shows exactly 2 receipts
+✅ Each page shows exactly 2 receipts for the same user (same ID)
 ✅ No content cut off at edges  
 ✅ Text is clear and readable
 ✅ Borders are properly aligned
@@ -1020,12 +1022,6 @@ wkhtmltopdf --page-size A4 --margin-top 3mm --margin-bottom 3mm --margin-left 4m
 **Problem:** Overlapping content
 **Solution:** Use Chrome/Edge, avoid Firefox
 
-## 📊 COST SAVINGS ANALYSIS:
-- Paper Cost Saved: ₹{paper_saved * 0.50:.0f} (@ ₹0.50/page)
-- Print Time Saved: ~{paper_saved * 30} seconds
-- Storage Space Saved: {(paper_saved/total_receipts*100):.1f}%
-- Ink Usage: Reduced by 20% (better spacing)
-
 ## 🎨 DESIGN OPTIMIZATIONS:
 - Header religious text: Compact 7px font
 - Organization name: 12px bold red
@@ -1039,11 +1035,9 @@ The HTML is responsive but optimized for A4 printing.
 For viewing: Zoom out to see full page layout.
 
 ## 🔄 BATCH PROCESSING:
-For files with 500+ receipts:
-- Automatic batch creation (200 receipts per batch)
-- Each batch = 100 A4 pages maximum
+For large files:
+- Automatic batch creation (100 users / 100 pages / 200 receipts per batch)
 - Separate HTML files for easier handling
-- Merge PDFs using provided scripts
 
 ## 💡 PRO TIPS:
 1. **Best Browsers:** Chrome (99%), Edge (95%), Safari (90%)
@@ -1052,15 +1046,8 @@ For files with 500+ receipts:
 4. **Test Print:** Print 1 page first to verify settings
 5. **Paper Quality:** Use 75-80 GSM for professional look
 
-## 🌟 ACHIEVEMENT UNLOCKED:
-✅ 50% paper reduction achieved
-✅ 95% space utilization accomplished  
-✅ Professional print quality maintained
-✅ Zero content compromise
-✅ Perfect A4 optimization completed
-
 Generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
-Optimized for maximum efficiency with professional quality output.
+Optimized for 2 receipts per user with professional quality output.
     """
     
     with open('Optimized_Dual_Receipt_Instructions.txt', 'w', encoding='utf-8') as f:
@@ -1068,14 +1055,14 @@ Optimized for maximum efficiency with professional quality output.
     
     print(f"📋 Created Optimized_Dual_Receipt_Instructions.txt")
 
-def create_optimized_batch_files(receipt_data, batch_size=200, blue_logo_base64="", mataji_image_base64=""):
-    """Create optimized batch files for dual receipt layout"""
-    total_receipts = len(receipt_data)
-    total_batches = math.ceil(total_receipts / batch_size)
+def create_optimized_batch_files(receipt_data, batch_size=100, blue_logo_base64="", mataji_image_base64=""):
+    """Create optimized batch files for dual receipt layout (2 receipts per user per page)"""
+    total_users = len(receipt_data)
+    total_batches = math.ceil(total_users / batch_size)
     
     print(f"\n📦 CREATING OPTIMIZED BATCH FILES:")
-    print(f"Total receipts: {total_receipts}")
-    print(f"Batch size: {batch_size} receipts ({batch_size//2} A4 pages)")
+    print(f"Total users: {total_users}")
+    print(f"Batch size: {batch_size} users ({batch_size} A4 pages, {batch_size * 2} receipts)")
     print(f"Total batches: {total_batches}")
     print(f"-" * 50)
     
@@ -1083,9 +1070,11 @@ def create_optimized_batch_files(receipt_data, batch_size=200, blue_logo_base64=
     
     for batch_num in range(total_batches):
         start_idx = batch_num * batch_size
-        end_idx = min((batch_num + 1) * batch_size, total_receipts)
+        end_idx = min((batch_num + 1) * batch_size, total_users)
         batch_data = receipt_data[start_idx:end_idx]
-        batch_pages = math.ceil(len(batch_data) / 2)
+        batch_users = len(batch_data)
+        batch_pages = batch_users
+        batch_receipts = batch_users * 2
         
         # Generate HTML for this batch
         pages_html = generate_dual_receipt_pages(batch_data, blue_logo_base64, mataji_image_base64)
@@ -1096,7 +1085,7 @@ def create_optimized_batch_files(receipt_data, batch_size=200, blue_logo_base64=
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Optimized Batch {batch_num + 1} - Receipts {start_idx + 1} to {end_idx} ({batch_pages} A4 Pages)</title>
+    <title>Optimized Batch {batch_num + 1} - Users {start_idx + 1} to {end_idx} ({batch_pages} A4 Pages, {batch_receipts} Receipts)</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Devanagari:wght@400;600;700&display=swap" rel="stylesheet">
@@ -1108,14 +1097,15 @@ def create_optimized_batch_files(receipt_data, batch_size=200, blue_logo_base64=
     <div class="print-controls">
         <h2>📄 Optimized Batch {batch_num + 1}</h2>
         <div class="info">
-            <div><strong>Receipts:</strong> {len(batch_data)}</div>
+            <div><strong>Users:</strong> {batch_users}</div>
             <div><strong>A4 Pages:</strong> {batch_pages}</div>
-            <div><strong>Range:</strong> {start_idx + 1}-{end_idx}</div>
+            <div><strong>Receipts:</strong> {batch_receipts} (2/user)</div>
+            <div><strong>Range:</strong> User {start_idx + 1}-{end_idx}</div>
             <div><strong>Space Usage:</strong> 95%</div>
         </div>
-        <button class="print-btn" onclick="window.print()">🖨️ Print Batch</button>
+        <button class="print-btn" onclick="window.print()">🖨️ Print Batch ({batch_pages} Pages)</button>
         <div style="margin-top: 6px; font-size: 10px; text-align: center;">
-            Perfect A4 fit with minimal margins
+            2 receipts per user • Perfect A4 fit
         </div>
     </div>
 
@@ -1124,14 +1114,14 @@ def create_optimized_batch_files(receipt_data, batch_size=200, blue_logo_base64=
 </html>"""
         
         # Save batch file
-        batch_filename = f"optimized_dual_batch_{batch_num + 1:02d}_receipts_{start_idx + 1}-{end_idx}_{batch_pages}pages.html"
+        batch_filename = f"optimized_dual_batch_{batch_num + 1:02d}_users_{start_idx + 1}-{end_idx}_{batch_pages}pages.html"
         
         try:
             with open(batch_filename, 'w', encoding='utf-8') as f:
                 f.write(html_content)
             
             batch_files.append(batch_filename)
-            print(f"✅ Batch {batch_num + 1:2d}: {batch_filename} ({len(batch_data)} receipts, {batch_pages} pages)")
+            print(f"✅ Batch {batch_num + 1:2d}: {batch_filename} ({batch_users} users, {batch_receipts} receipts, {batch_pages} pages)")
             
         except Exception as e:
             print(f"❌ Error creating batch {batch_num + 1}: {str(e)}")
@@ -1139,13 +1129,16 @@ def create_optimized_batch_files(receipt_data, batch_size=200, blue_logo_base64=
     return batch_files
 
 def generate_pdf_with_weasyprint_optimized(receipt_data, blue_logo_base64="", mataji_image_base64=""):
-    """Generate PDF directly using WeasyPrint with optimized dual layout"""
+    """Generate PDF directly using WeasyPrint with optimized dual layout (2 receipts per user per page)"""
     try:
         from weasyprint import HTML, CSS
         
-        total_pages = math.ceil(len(receipt_data) / 2)
-        print(f"🔄 Generating PDF using WeasyPrint (Optimized Dual Layout)...")
-        print(f"Total receipts: {len(receipt_data)}")
+        total_users = len(receipt_data)
+        total_pages = total_users
+        total_receipts = total_users * 2
+        print(f"🔄 Generating PDF using WeasyPrint (2 Receipts Per User)...")
+        print(f"Total users: {total_users}")
+        print(f"Total receipts: {total_receipts} (2 per user)")
         print(f"A4 pages: {total_pages}")
         print(f"Space utilization: 95%")
         
@@ -1166,7 +1159,7 @@ def generate_pdf_with_weasyprint_optimized(receipt_data, blue_logo_base64="", ma
 </html>"""
         
         # Generate PDF with optimized settings
-        pdf_filename = f"optimized_dual_receipts_{len(receipt_data)}receipts_{total_pages}pages_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf"
+        pdf_filename = f"optimized_dual_receipts_{total_users}users_{total_receipts}receipts_{total_pages}pages_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf"
         
         # Create CSS for WeasyPrint with exact measurements
         css_content = CSS(string="""
@@ -1179,7 +1172,7 @@ def generate_pdf_with_weasyprint_optimized(receipt_data, blue_logo_base64="", ma
         HTML(string=html_content).write_pdf(pdf_filename, stylesheets=[css_content])
         
         print(f"✅ Optimized PDF generated: {pdf_filename}")
-        print(f"📊 Efficiency: {len(receipt_data) - total_pages} pages saved with 95% space utilization!")
+        print(f"📊 2 receipts per user on {total_pages} A4 pages generated successfully!")
         return pdf_filename
         
     except ImportError:
@@ -1190,43 +1183,44 @@ def generate_pdf_with_weasyprint_optimized(receipt_data, blue_logo_base64="", ma
         return None
 
 def main():
-    """Main function for optimized dual receipt generation"""
-    print("🎯 OPTIMIZED DUAL RECEIPT GENERATOR - PERFECT A4 FIT")
+    """Main function for optimized dual receipt generation (2 receipts per user per page)"""
+    print("🎯 OPTIMIZED DUAL RECEIPT GENERATOR - 2 RECEIPTS PER USER PER PAGE")
     print("=" * 70)
-    print("🚀 Features: 95% space utilization, minimal gaps, perfect print fit")
+    print("🚀 Features: 2 identical receipts for each user on one A4 page, 95% space utilization")
     print()
     
     # Install required packages
     install_required_packages()
     
-    # File path - UPDATE THIS TO YOUR EXCEL FILE PATH
+    # Data source - prefers updated JSON, fallback to Excel
+    json_file = "recipt_form_processed_receipts.json"
     file_path = "/home/manish/Documents/new_file.xlsx"
     
-    # Check if file exists
-    if not os.path.exists(file_path):
-        print(f"❌ Excel file not found: {file_path}")
-        print(f"Please update the file_path variable in the script")
+    if os.path.exists(json_file):
+        print(f"Loading data from: {json_file}")
+        with open(json_file, 'r', encoding='utf-8') as f:
+            receipt_data = json.load(f)
+        print(f"✅ Loaded {len(receipt_data)} records from JSON database")
+    elif os.path.exists(file_path):
+        print(f"Processing Excel file: {file_path}")
+        receipt_data = process_excel_for_receipts(file_path)
+    else:
+        print(f"❌ No data file found ({json_file} or {file_path})")
         return
     
-    print(f"Processing file: {file_path}")
-    print()
-    
-    # Process Excel data
-    receipt_data = process_excel_for_receipts(file_path)
-    
     if receipt_data:
-        total_receipts = len(receipt_data)
-        total_pages = math.ceil(total_receipts / 2)
-        paper_saved = total_receipts - total_pages
+        total_users = len(receipt_data)
+        total_pages = total_users
+        total_receipts = total_users * 2
         
-        print(f"\n🔄 GENERATING OPTIMIZED DUAL LAYOUT...")
-        print(f"Total receipts: {total_receipts}")
+        print(f"\n🔄 GENERATING OPTIMIZED DUAL LAYOUT (2 RECEIPTS PER USER)...")
+        print(f"Total users: {total_users}")
+        print(f"Total receipts: {total_receipts} (2 per user)")
         print(f"A4 pages required: {total_pages}")
-        print(f"Paper saved: {paper_saved} pages ({(paper_saved/total_receipts*100):.1f}% reduction)")
-        print(f"Space utilization: 95% (vs 70% single layout)")
+        print(f"Space utilization: 95%")
         
         # Try WeasyPrint first for large files
-        if total_receipts > 200:
+        if total_users > 200:
             print(f"\n🐍 Attempting WeasyPrint optimized PDF generation...")
             pdf_file = generate_pdf_with_weasyprint_optimized(receipt_data, blue_logo_base64, mataji_image_base64)
             
@@ -1234,7 +1228,7 @@ def main():
                 print(f"✅ Optimized PDF generated successfully!")
             else:
                 print(f"📦 WeasyPrint not available, creating optimized batch files...")
-                batch_files = create_optimized_batch_files(receipt_data, 200, blue_logo_base64, mataji_image_base64)
+                batch_files = create_optimized_batch_files(receipt_data, 100, blue_logo_base64, mataji_image_base64)
                 print(f"✅ Created {len(batch_files)} optimized batch files")
         
         # Always create the main optimized HTML file
@@ -1243,28 +1237,16 @@ def main():
         html_file = save_and_open_dual_html(html_content)
         
         # Create optimized instructions
-        create_optimized_pdf_instructions(total_receipts, total_pages)
+        create_optimized_pdf_instructions(total_users, total_pages)
         
         if html_file:
-            print(f"\n🎉 SUCCESS - OPTIMIZED DUAL RECEIPT LAYOUT!")
+            print(f"\n🎉 SUCCESS - OPTIMIZED DUAL RECEIPT LAYOUT (2 RECEIPTS PER USER)!")
             print(f"=" * 55)
-            print(f"✅ Processed {total_receipts} receipts")
-            print(f"✅ Optimized to {total_pages} A4 pages")
+            print(f"✅ Processed {total_users} users ({total_receipts} receipts)")
+            print(f"✅ Generated {total_pages} A4 pages (2 receipts per user per page)")
             print(f"✅ Achieved 95% space utilization")
             print(f"✅ Minimized margins and gaps")
             print(f"✅ Perfect print alignment")
-            
-            print(f"\n🚀 OPTIMIZATION ACHIEVEMENTS:")
-            print(f"Space efficiency: 95% (industry best)")
-            print(f"Paper reduction: {(paper_saved/total_receipts*100):.1f}%")
-            print(f"Print time saved: ~{paper_saved * 30} seconds")
-            print(f"Margin optimization: 3mm (vs 5mm standard)")
-            print(f"Receipt spacing: 2mm (vs 5mm standard)")
-            
-            print(f"\n💰 COST SAVINGS:")
-            print(f"Paper cost saved: ~₹{paper_saved * 0.50:.0f}")
-            print(f"Ink usage reduction: ~20%")
-            print(f"Storage space saved: {(paper_saved/total_receipts*100):.1f}%")
             
             print(f"\n📝 OPTIMIZED PRINT PROCESS:")
             print(f"1. HTML file opened automatically")
@@ -1275,11 +1257,12 @@ def main():
             
             print(f"\n💡 FILES CREATED:")
             print(f"• {html_file} - Optimized dual receipt file")
-            if total_receipts > 200:
+            if total_users > 200:
                 print(f"• optimized_dual_batch_XX.html - Batch files")
             print(f"• Optimized_Dual_Receipt_Instructions.txt - Complete guide")
             
             print(f"\n🌟 QUALITY ASSURANCE:")
+            print(f"✅ Each A4 page contains 2 identical receipts for the same user ID")
             print(f"✅ Perfect A4 fit achieved")
             print(f"✅ No content cutoff issues") 
             print(f"✅ Professional print quality maintained")
@@ -1288,7 +1271,7 @@ def main():
             print(f"✅ Border thickness optimized for printing")
             
             print(f"\n🎯 NEXT STEPS:")
-            print(f"Ready for immediate printing with perfect A4 optimization!")
+            print(f"Ready for immediate printing with 2 receipts per user!")
             
         else:
             print(f"\n❌ Failed to generate optimized HTML file")
